@@ -1,8 +1,7 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { ContactDetailScreenRouteProp } from '../../navigation/types/types';
-import { useRoute } from '@react-navigation/native';
+import { SafeAreaView, StyleSheet} from 'react-native';
 import ContactDetailComponent from '../../components/contacts/ContactDetalil.component';
+
 
 const ContactDetailScreen = () => {
     return (

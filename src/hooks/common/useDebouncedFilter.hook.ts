@@ -7,7 +7,9 @@ const useDebouncedFilter = (data: IContact[], query: string, delay: number = 100
   useEffect(() => {
     const handler = setTimeout(() => {
       if (data) {
+        console.log(data);
         setFilteredData(
+          
           data.filter((contact) =>
             contact.name.toLowerCase().includes(query.toLowerCase()) ||
             contact.phone.includes(query)

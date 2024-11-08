@@ -12,14 +12,15 @@ const useSubmitAddContact = () => {
     
     const contactData = {
       ...data,
-      photo: data.photo || 'https://i.ibb.co/27q4LTW/vectors-3.png',
+      photo: data.photo || '',
     };
 
     try {
-      await ContactService.create(contactData);
+      const createdContact = await ContactService.create(contactData);      
+      
       onSuccess(); 
     } catch (err: any) {
-      console.error(err);
+      setError(err.message || JSON.stringify(err) || 'Error al agregar contacto'); 
       setError(err.message || 'Error al agregar contacto');
     } finally {
       setLoading(false);

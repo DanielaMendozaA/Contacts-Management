@@ -1,40 +1,34 @@
 import { PermissionsAndroid, Alert } from 'react-native';
 import { check, RESULTS, PERMISSIONS, PermissionStatus } from 'react-native-permissions';
+import { Permissions } from '../enums/permission.enum';
 
-export async function ensureLocationPermission(): Promise<boolean> {
+export async function ensureLocationPermission(permission: Permissions): Promise<boolean> {
   try {
-    const fineStatus: PermissionStatus = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    const coarseStatus: PermissionStatus = await check(PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION);
-    let fineGranted: boolean = fineStatus === RESULTS.GRANTED;
-    let coarseGranted: boolean = coarseStatus === RESULTS.GRANTED;
+    let permissionStatus: PermissionStatus
+    switch (permission) {
+      case Permissions.CAMERA:
+        permissionStatus = await check(PERMISSIONS.ANDROID.CAMERA);
+        break;
+      case Permissions.ACCESS_FINE_LOCATION:
+        permissionStatus = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+        break;
+      case Permissions.READ_MEDIA_IMAGES:
+        permissionStatus = await check(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+        break;
+      default:
+        throw new Error('Unknown permission')
 
-    if (fineGranted && coarseGranted) {
-      console.log('Permiso ya concedido',fineGranted,  coarseGranted);
-      return true;
     }
 
-    if(fineGranted && !coarseGranted){
-      coarseGranted = await requestLocationPermission('coarse');
-      console.log("pemiso", coarseGranted );
-      
-      return coarseGranted
-    }
+    if (permissionStatus === RESULTS.GRANTED) {
+      console.log('Permiso ya concedido', permissionStatus);
+      return true
+    } 
 
-    if(!fineGranted && coarseGranted){
-      fineGranted = await requestLocationPermission('fine');
-      console.log("pemiso", fineGranted );
-      return fineGranted
-    }
+    const permissionGranted: Promise<boolean> = requestLocationPermission(permission)
 
+    return permissionGranted
 
-
-    fineGranted  = await requestLocationPermission('fine');
-    coarseGranted = await requestLocationPermission('coarse');
-    console.log('Permiso desde afuera',fineGranted,  coarseGranted);
-    
-
-
-    return fineGranted && coarseGranted
   } catch (err) {
     console.warn(err);
     return false;
@@ -42,20 +36,43 @@ export async function ensureLocationPermission(): Promise<boolean> {
 }
 
 
-async function requestLocationPermission(type: 'fine' | 'coarse'): Promise<boolean> {
+async function requestLocationPermission(type: Permissions): Promise<boolean> {
   try {
-    const permissionType = 
-      type === 'fine' 
-        ? PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION 
-        : PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION;
-    
+    let permissionType 
+    let title: string
+    let message: string
+
+    switch (type) {
+      case Permissions.CAMERA:
+        permissionType = PermissionsAndroid.PERMISSIONS.CAMERA;
+        title = "Permiso de Camara"
+        message = "Se necesita acceso a la camara"
+        break;
+      case Permissions.ACCESS_FINE_LOCATION:
+        permissionType = PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION;
+         title = "Permiso de Ubicación Precisa"
+         message = "Se necesita acceso a la ubicación precisa"
+        break;
+      case Permissions.READ_MEDIA_IMAGES:
+        permissionType = PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES;
+        title = "Permiso para acceder a la galeria"
+        message = "Se necesita acceso a la galeria"
+        break;
+      default:
+        throw new Error('Unknown permission')
+
+    }
+
+    if (!permissionType) {
+      throw new Error('Permission type is undefined');
+    }
+
+
     const granted = await PermissionsAndroid.request(permissionType, {
-      title: type === 'fine' ? "Permiso de Ubicación Precisa" : "Permiso de Ubicación Aproximada",
-      message: type === 'fine' 
-        ? "Esta aplicación necesita acceder a tu ubicación precisa para mostrar contenido relevante en el mapa." 
-        : "Esta aplicación necesita acceder a tu ubicación aproximada para mostrar contenido relevante en el mapa.",
+      title: title,
       buttonPositive: "Aceptar",
       buttonNegative: "Cancelar",
+      message: message
     });
 
     return granted === PermissionsAndroid.RESULTS.GRANTED;
