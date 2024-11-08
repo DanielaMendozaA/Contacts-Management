@@ -1,53 +1,60 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Image, Button, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { View, StyleSheet, ActivityIndicator, Image, ScrollView, Alert, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+
 import { ContactDetailScreenRouteProp, ContactListScreenNavigationProp } from '../../navigation/types/types';
 import CustomText from '../common/CustomText.component';
-import { useFetchContactId } from '../../hooks/common/fetch.hook';
+import { useFetch, useFetchContactId } from '../../hooks/common/fetch.hook';
 import { ContactService } from '../../services/contacts/contact.service';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomTouchableIcon from '../common/CustomIconTouchable.component';
 import EditContactModal from './EditContactModal.component';
-import { ensureLocationPermission } from '../../utilities/permissions';
-import MapPickerComponent from '../others/MapPickerComponent';
+
+import MapView, { Marker } from 'react-native-maps';
+import useAddressWeather from '../../hooks/contacts/useAddressWeather';
+import useContactAdress from '../../hooks/contacts/useContactAddressWeather';
+import CustomButton from '../common/CustomTextTouchable.component';
+import { useContacts } from '../../context/ContactContext';
 
 const ContactDetailComponent: React.FC = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [favorite, setFavorite] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+
+
   const navigation = useNavigation<ContactListScreenNavigationProp>();
+  const [deleting, setDeleting] = useState(false);
   const route = useRoute<ContactDetailScreenRouteProp>();
   const { contactId } = route.params;
-  const [favorite, setFavorite] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isMapVisible, setIsMapVisible] = useState(false);
-  const [contactLocation, setContactLocation] = useState<{ latitude: number, longitude: number } | null>(null);
+  const { data, loading, error, refetchEdit } = useFetchContactId(() => ContactService.getById(contactId));
+  const { weather } = useAddressWeather(data.latitude, data.longitude);
+  const { address } = useContactAdress(data.latitude, data.longitude);
 
-  const handleLocationAccess = async () => {
-    const hasPermission = await ensureLocationPermission();
+  const { refetch } = useContacts();
 
-    if (hasPermission) {
-      setIsMapVisible(true);
-    } else {
-      Alert.alert(
-        "Permiso Denegado",
-        "No se pudo obtener el permiso de ubicación. Por favor, actívalo en Configuración."
-      );
-    }
-  }
+  const showDeleteModal = () => {
+    setIsDeleteModalVisible(true);
+  };
 
-  const saveContactLocation = async (coords: { latitude: number; longitude: number }) => {
+  const confirmDelete = async () => {
     try {
-      await ContactService.updateContact(contactId, coords);
-      console.log(coords);
-      
-      setContactLocation(coords);
-      setIsMapVisible(false);
-      Alert.alert("Ubicación guardada correctamente.");
+      await ContactService.deleteContact(contactId);
+      Alert.alert("Usuario Eliminado con Éxito");
+      refetch();
+      setIsDeleteModalVisible(false);
+      navigation.navigate('ContactList');
     } catch (error) {
-      console.error("Error al guardar la ubicación:", error);
-      Alert.alert("Error al guardar la ubicación.");
+      console.error("Error al eliminar el contacto:", error);
+      Alert.alert("Error al eliminar el contacto");
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const { data, loading, error, refetch } = useFetchContactId(() => ContactService.getById(contactId), [contactId]);
+  const cancelDelete = () => {
+    setIsDeleteModalVisible(false);
+  };
+
 
   const toggleFavorite = () => {
     setFavorite(!favorite);
@@ -59,12 +66,7 @@ const ContactDetailComponent: React.FC = () => {
 
   const closeModal = () => {
     setIsModalVisible(false);
-    refetch();
-  };
-
-  const deleteContact = () => {
-    ContactService.deleteContact(contactId);
-    navigation.navigate('ContactList');
+    refetchEdit();
   };
 
   if (loading) {
@@ -75,15 +77,61 @@ const ContactDetailComponent: React.FC = () => {
     return <CustomText>Error: {error}</CustomText>;
   }
 
+  const weatherIconCode = weather ? weather.weather[0].icon : null;
+  const weatherIconUrl = weatherIconCode
+    ? `http://openweathermap.org/img/wn/${weatherIconCode}.png`
+    : null;
+
+
+
+  console.log("data desde el componente getone", data.name);
+
+  if (!data) {
+    return <CustomText>No hay datos</CustomText>;
+  }
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.containerPhoto}>
         <View style={styles.containerIcons}>
-          <CustomTouchableIcon iconName={favorite ? 'star' : 'star-outline'} onPress={toggleFavorite} size={35} />
-          <CustomTouchableIcon iconName="edit" onPress={openModal} size={35} />
-          <CustomTouchableIcon iconName="delete-outline" onPress={deleteContact} size={35} />
+          <CustomTouchableIcon
+            iconName={favorite ? 'star' : 'star-outline'}
+            onPress={toggleFavorite} size={35}
+          />
+
+          <CustomTouchableIcon
+            iconName="edit"
+            onPress={openModal}
+            size={35}
+          />
+          <CustomTouchableIcon
+            iconName="delete-outline"
+            onPress={showDeleteModal}
+            size={35}
+          />
+
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={isDeleteModalVisible}
+            onRequestClose={cancelDelete}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <CustomText>¿Estás seguro de que deseas eliminar este contacto?</CustomText>
+                <View style={styles.buttonContainer}>
+                  <CustomButton title="Cancelar" onPress={cancelDelete} />
+                  <CustomButton title="Eliminar" onPress={confirmDelete} />
+                </View>
+              </View>
+            </View>
+          </Modal>
         </View>
-        <Image source={{ uri: data.photo }} style={styles.photo} resizeMode="cover" />
+        {data.photo ? (
+          <Image source={{ uri: data.photo }} style={styles.photo} resizeMode="cover" />
+        ) : (
+          <Icon name="account-circle" size={200} color="#ccc" />
+        )}
         <CustomText style={styles.name}>{data.name}</CustomText>
       </View>
 
@@ -103,16 +151,70 @@ const ContactDetailComponent: React.FC = () => {
         <Icon name="email" size={24} color="#795757" />
       </View>
 
-      <Button title="Acceder a la Ubicación" onPress={handleLocationAccess} />
-      
-      <MapPickerComponent 
-        isVisible={isMapVisible} 
-        onLocationSelected={saveContactLocation} 
-        onClose={() => setIsMapVisible(false)} 
-      />
+
+      <View style={styles.infoRow}>
+        <View style={styles.infoBox}>
+          <CustomText style={styles.infoLabel}>Ubicación</CustomText>
+          <CustomText style={styles.infoText}>{address}</CustomText>
+        </View>
+        <Icon name="location-on" size={28} color="#795757" />
+      </View>
+
+      {weather &&
+
+        <View style={styles.humTem}>
+
+          <View style={styles.temView}>
+            <Icon name="thermostat" size={40} color="#7C2908" style={styles.weatherIconTermHum} />
+            <CustomText style={styles.infoText}>
+              {weather.main.temp}°C
+            </CustomText>
+          </View>
+
+          <View style={styles.temView}>
+            {weatherIconUrl && <Image source={{ uri: weatherIconUrl }} style={styles.weatherIcon} />}
+            <View style={styles.weatherDescriptionContainer}>
+              {weather.weather && weather.weather[0].description
+                ? weather.weather[0].description.split(' ').map((word: string, index: number) => (
+                  <CustomText key={index} style={styles.infoText}>
+                    {word}
+                  </CustomText>
+                ))
+                : null}
+            </View>
+          </View>
+
+          <View style={styles.temView}>
+            <Icon name="water-drop" size={40} color="#A2E4F0" style={styles.weatherIconTermHum} />
+            <CustomText style={styles.infoText}>
+              {weather.main.humidity}%
+            </CustomText>
+          </View>
+        </View>
+      }
+      {data.longitude && data.latitude ? (
+
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: Number(data.latitude),
+            longitude: Number(data.longitude),
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01
+          }}
+          liteMode
+        >
+          <Marker
+            coordinate={{
+              latitude: Number(data.latitude),
+              longitude: Number(data.longitude),
+            }}
+          />
+        </MapView>
+      ) : null}
 
       <EditContactModal contactId={contactId} visible={isModalVisible} onClose={closeModal} contact={data} />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -167,6 +269,67 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(12, 13, 13, 0.77)',
   },
+  weatherIcon: {
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignContent: 'center',
+    width: 50,
+    height: 50,
+    backgroundColor: '#e88945',
+  },
+  map: {
+    width: "100%",
+    height: 200,
+  },
+  containerWeather: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  humTem: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    padding: 20
+  },
+  temView: {
+    justifyContent: 'center',
+    alignItems: 'center'
+
+  },
+  weatherIconTermHum: {
+    width: 50,
+    height: 50,
+    padding: 5,
+    borderRadius: 40,
+    backgroundColor: '#e88945',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weatherDescriptionContainer: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
 });
 
 export default ContactDetailComponent;
+

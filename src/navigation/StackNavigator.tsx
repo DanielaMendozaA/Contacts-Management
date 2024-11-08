@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ContactsScreen from '../screens/contacts/Contact.screen';
 import ContactDetailScreen from '../screens/contacts/ContactDetail.screen';
 import TabNavigator from './TabNavigator';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import CustomTouchableIcon from '../components/common/CustomIconTouchable.component';
+import { StyleSheet} from 'react-native';
+
 
 const Stack = createNativeStackNavigator();
 

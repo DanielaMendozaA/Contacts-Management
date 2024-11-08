@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import MapView, { LatLng, MapPressEvent, Marker, Region } from 'react-native-maps';
 import { View, Button, StyleSheet, Modal, Alert } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
+import CustomButton from '../common/CustomTextTouchable.component';
+import CustomTouchableIcon from '../common/CustomIconTouchable.component';
 
 interface MapPickerProps {
   onLocationSelected: (coords: LatLng) => void;
@@ -20,11 +22,11 @@ const MapPickerComponent: React.FC<MapPickerProps> = ({ onLocationSelected, isVi
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(
     latitudeContact && longitudeContact
       ? {
-          latitude: latitudeContact,
-          longitude: longitudeContact,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }
+        latitude: latitudeContact,
+        longitude: longitudeContact,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }
       : undefined
   );
 
@@ -46,15 +48,7 @@ const MapPickerComponent: React.FC<MapPickerProps> = ({ onLocationSelected, isVi
           },
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
         );
-      } 
-      // else {
-      //   setInitialRegion({
-      //     latitude: latitudeContact,
-      //     longitude: longitudeContact,
-      //     latitudeDelta: 0.01,
-      //     longitudeDelta: 0.01,
-      //   });
-      // }
+      }
     };
 
     if (isVisible && !selectedLocation) {
@@ -75,6 +69,12 @@ const MapPickerComponent: React.FC<MapPickerProps> = ({ onLocationSelected, isVi
       onRequestClose={onClose}
     >
       <View style={styles.modalContainer}>
+        <CustomTouchableIcon
+          iconName="close"
+          size={40}
+          color="#C57D05"
+          style={styles.closeButton}
+          onPress={onClose} />
         <View style={styles.modalContent}>
           {initialRegion ? (
             <MapView
@@ -95,8 +95,10 @@ const MapPickerComponent: React.FC<MapPickerProps> = ({ onLocationSelected, isVi
               <Button title="Cargando mapa..." disabled />
             </View>
           )}
-          <Button title="Guardar Ubicación" onPress={() => selectedLocation && onLocationSelected(selectedLocation)} />
-          <Button title="Cerrar" onPress={onClose} />
+          <CustomButton
+            title="Guardar Ubicación"
+            onPress={() => selectedLocation && onLocationSelected(selectedLocation)} />
+
         </View>
       </View>
     </Modal>
@@ -108,7 +110,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'white',
   },
   modalContent: {
     width: '90%',
@@ -125,6 +127,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  closeButton: {
+    left: "42%", 
   },
 });
 

@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: 'RethinkSans-Regular', 
     fontSize: 16,
-    color: 'black'
+    color: 'rgb(95, 58, 32)'
   },
 });
 

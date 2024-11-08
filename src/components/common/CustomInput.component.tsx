@@ -20,13 +20,12 @@ const CustomInput: React.FC<CustomInputProps> = ({ value, onChange, placeholder,
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor="#999" // Ajusta esto si necesitas un color específico
+        placeholderTextColor="rgb(95, 58, 32)" 
       />
     </Container>
   );
 };
 
-// Definir los estilos utilizando styled-components
 const Container = styled.View`
   flex-direction: row;
   align-items: center;
@@ -43,7 +42,7 @@ const StyledIcon = styled(Icon)`
 const StyledTextInput = styled.TextInput`
   flex: 1;
   height: 40px;
-  color: ${(props) => props.theme.colors.textPrimary};
+  color: rgb(95, 58, 32);
 `;
 
 export default CustomInput;

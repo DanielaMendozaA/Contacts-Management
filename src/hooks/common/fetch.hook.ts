@@ -1,8 +1,9 @@
+import { AxiosResponse } from 'axios';
 import { useState, useEffect } from 'react';
 
 
 
-const useFetch = <T>(serviceFunction: () => Promise<T>, dependencies: any[] = []) => {
+const useFetch = <T>(serviceFunction: () => Promise<any>, dependencies: any[] = []) => {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,17 +13,23 @@ const useFetch = <T>(serviceFunction: () => Promise<T>, dependencies: any[] = []
     setError(null);
     try {
       const result = await serviceFunction();
-      setData(result);
+      setData(result.data);
     } catch (error: any) {
       console.error(error);
-      setError(error.message || 'Error fetching data desde aqui');
+      setError(error.message || 'Error fetching data');
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, dependencies);
 
   return { data, loading, error, refetch: fetchData };
 };
+
+
 
 const useFetchContactId = (serviceFunction: () => Promise<any>, dependencies: any[] = []) => {
   const [data, setData] = useState<any | null>([]);
@@ -32,7 +39,9 @@ const useFetchContactId = (serviceFunction: () => Promise<any>, dependencies: an
   async function fetchData() {
     try {
       const result = await serviceFunction();
-      setData(result);
+      // console.log("resultado desde el hook getone", result);
+      
+      setData(result.data);
     } catch (error: any) {
       console.error(error);
       setError(error.message || 'Error fetching data desde aqui');
@@ -43,9 +52,9 @@ const useFetchContactId = (serviceFunction: () => Promise<any>, dependencies: an
 
   useEffect(() => {
     fetchData();
-  }, [dependencies]);
+  }, []);
 
-  return { data, loading, error, refetch: fetchData};
+  return { data, loading, error, refetchEdit: fetchData};
 };
 
 
