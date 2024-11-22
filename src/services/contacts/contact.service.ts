@@ -1,11 +1,13 @@
-import { axiosInstanceContacts } from "../../config/axios.config";
-import { TEndpointKeys, CONTACTS_API_ENDPOINTS } from "./contact.endpoint";
-import { IContact, ICreateContact, IEditContact } from '../../interfaces/contact.interface';
-import handleAxiosError from "../../utilities/handle-errors";
-import { IContactDeleteResponse, IContactResponse, IContactUpdateResponse } from "../../interfaces/contactResponse.interface";
+import { TEndpointKeys, CONTACTS_API_ENDPOINTS, IQueryContact } from "./contact.endpoint";
 
-const endpoints = (method: TEndpointKeys, id?: string) => {
-    return CONTACTS_API_ENDPOINTS(id)[method];
+import handleAxiosError from "../../utilities/handle-errors";
+import { IContactDeleteResponse, IContactResponse, IContactUpdateResponse } from "../../interfaces/contacts/contactResponse.interface";
+import { IContact, ICreateContact, IEditContact } from "../../interfaces/contacts/contact.interface";
+import { axiosInstanceBack } from "../../config/axios.config";
+import { PaginatedResponse } from "../../interfaces/others/paginationResponse.interface";
+
+const endpoints = (method: TEndpointKeys, id?: number | string, limit?: number, page?: number, queryContact?: IQueryContact) => {
+    return CONTACTS_API_ENDPOINTS(id, limit, page, queryContact)[method];
 }
 
 export class ContactService {
@@ -13,7 +15,7 @@ export class ContactService {
         const endpoint = endpoints('GET_ALL_OR_FILTER');
 
         try {
-            const response = await axiosInstanceContacts.get<IContactResponse>(`${endpoint}`);
+            const response = await axiosInstanceBack.get<IContactResponse>(`${endpoint}`);
             return response.data;
 
         } catch (error: any) {
@@ -27,7 +29,7 @@ export class ContactService {
     static async create(body: ICreateContact): Promise<IContactResponse> {
         const endpoint = endpoints('CREATE');
         try {
-            const response = await axiosInstanceContacts.post<IContactResponse>(`${endpoint}`, body);
+            const response = await axiosInstanceBack.post<IContactResponse>(`${endpoint}`, body);
             return response.data
 
         } catch (error: any) {
@@ -38,11 +40,10 @@ export class ContactService {
 
     }
 
-    static async getById(id: string) : Promise<IContactResponse> {
+    static async getById(id: number) : Promise<IContactResponse> {
         const endpoint = endpoints('GET_BY_ID', id);
         try {
-            const response = await axiosInstanceContacts.get<IContactResponse>(endpoint);
-            console.log("respuesta desde getById",  response.data);
+            const response = await axiosInstanceBack.get<IContactResponse>(endpoint);
             return response.data;
         } catch (error) {
             const errorMessage = handleAxiosError(error);
@@ -51,12 +52,10 @@ export class ContactService {
         }
     }
 
-    static async updateContact(id: string, body: IEditContact) : Promise<IContactUpdateResponse> {
+    static async updateContact(id: number, body: IEditContact) : Promise<IContactUpdateResponse> {
         const endpoint = endpoints('PATCH', id);
         try {
-            const updated = await axiosInstanceContacts.patch<IContactUpdateResponse>(endpoint, body)
-            console.log("contacto editado",updated);
-            
+            const updated = await axiosInstanceBack.patch<IContactUpdateResponse>(endpoint, body)            
             return updated.data
         } catch (error) {
             const errorMessage = handleAxiosError(error);
@@ -67,16 +66,34 @@ export class ContactService {
 
     }
 
-    static async deleteContact(id: string): Promise<IContactDeleteResponse> {
+    static async deleteContact(id: number): Promise<IContactDeleteResponse> {
         const endpoint = endpoints('DELETE', id);
         try {
-            const deleteContact = await axiosInstanceContacts.delete<IContactDeleteResponse>(endpoint)
+            const deleteContact = await axiosInstanceBack.delete<IContactDeleteResponse>(endpoint)
             return deleteContact.data
         } catch (error) {
             const errorMessage = handleAxiosError(error);
             console.error("Error en getById:", errorMessage);
             throw error;
         }
+
+    }
+
+    static async findContactByUserId(userId: string, limit = 10, page = 1, queryContact?: IQueryContact): Promise<PaginatedResponse<IContact>>{
+        const endpoint = endpoints('GET_CONTACTS_BY_USER_ID', userId, limit, page, queryContact)
+        console.log("este es el endpoint", endpoint);
+        
+        try {
+            const response = await axiosInstanceBack.get<PaginatedResponse<IContact>>(`${endpoint}`);            
+            return response.data;
+
+        } catch (error) {
+            const errorMessage = handleAxiosError(error);
+            console.error("Error en getById:", errorMessage);
+            throw error;
+        }
+
+
 
     }
 

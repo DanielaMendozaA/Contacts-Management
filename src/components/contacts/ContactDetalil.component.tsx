@@ -5,7 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 
 import { ContactDetailScreenRouteProp, ContactListScreenNavigationProp } from '../../navigation/types/types';
 import CustomText from '../common/CustomText.component';
-import { useFetch, useFetchContactId } from '../../hooks/common/fetch.hook';
+import { useFetchContactId, usePaginatedContacts } from '../../hooks/common/fetch.hook';
 import { ContactService } from '../../services/contacts/contact.service';
 import CustomTouchableIcon from '../common/CustomIconTouchable.component';
 import EditContactModal from './EditContactModal.component';
@@ -14,34 +14,45 @@ import MapView, { Marker } from 'react-native-maps';
 import useAddressWeather from '../../hooks/contacts/useAddressWeather';
 import useContactAdress from '../../hooks/contacts/useContactAddressWeather';
 import CustomButton from '../common/CustomTextTouchable.component';
-import { useContacts } from '../../context/ContactContext';
+import { AppDispatch } from '../../redux/store';
+import { useDispatch } from 'react-redux';
+import { removeContact } from '../../redux/features/contactSlice';
 
 const ContactDetailComponent: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [favorite, setFavorite] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
-
   const navigation = useNavigation<ContactListScreenNavigationProp>();
   const [deleting, setDeleting] = useState(false);
   const route = useRoute<ContactDetailScreenRouteProp>();
   const { contactId } = route.params;
-  const { data, loading, error, refetchEdit } = useFetchContactId(() => ContactService.getById(contactId));
+  const { data, loading, error, refetchEdit } = useFetchContactId(contactId);
   const { weather } = useAddressWeather(data.latitude, data.longitude);
   const { address } = useContactAdress(data.latitude, data.longitude);
 
-  const { refetch } = useContacts();
+  console.log("contacto----", data);
+
+
+  const dispatch: AppDispatch = useDispatch<AppDispatch>();
+
+  const {  fetchContacts } = usePaginatedContacts();
 
   const showDeleteModal = () => {
     setIsDeleteModalVisible(true);
   };
 
+  useEffect(() => {
+    refetchEdit();
+  }, [isModalVisible]);
+
   const confirmDelete = async () => {
     try {
       await ContactService.deleteContact(contactId);
       Alert.alert("Usuario Eliminado con Éxito");
-      refetch();
+      dispatch(removeContact(contactId));
       setIsDeleteModalVisible(false);
+      // fetchContacts(1)
       navigation.navigate('ContactList');
     } catch (error) {
       console.error("Error al eliminar el contacto:", error);
@@ -66,7 +77,6 @@ const ContactDetailComponent: React.FC = () => {
 
   const closeModal = () => {
     setIsModalVisible(false);
-    refetchEdit();
   };
 
   if (loading) {
@@ -82,17 +92,18 @@ const ContactDetailComponent: React.FC = () => {
     ? `http://openweathermap.org/img/wn/${weatherIconCode}.png`
     : null;
 
-
-
-  console.log("data desde el componente getone", data.name);
-
   if (!data) {
     return <CustomText>No hay datos</CustomText>;
   }
 
   return (
-    <ScrollView style={styles.container}>
+    // <ScrollView style={styles.container}>
+
+    <ScrollView>
+
+
       <View style={styles.containerPhoto}>
+
         <View style={styles.containerIcons}>
           <CustomTouchableIcon
             iconName={favorite ? 'star' : 'star-outline'}
@@ -126,13 +137,27 @@ const ContactDetailComponent: React.FC = () => {
               </View>
             </View>
           </Modal>
+
         </View>
+
         {data.photo ? (
           <Image source={{ uri: data.photo }} style={styles.photo} resizeMode="cover" />
         ) : (
-          <Icon name="account-circle" size={200} color="#ccc" />
+          <Icon name="account-circle" size={180} color="white" />
         )}
+
         <CustomText style={styles.name}>{data.name}</CustomText>
+
+        <View style={styles.containerCategory}>
+          <Icon
+            name={
+              data.category === 'cliente' ? 'emoji-people' :
+                data.category === 'empleado' ? 'badge' :
+                  'pending'
+            } size={40} color="rgb(220, 158, 33)" />
+          <CustomText style={styles.nameCategory}>{data.category === 'cliente' ? 'Cliente' : 'Empleado'}</CustomText>
+        </View>
+
       </View>
 
       <View style={styles.infoRow}>
@@ -165,7 +190,7 @@ const ContactDetailComponent: React.FC = () => {
         <View style={styles.humTem}>
 
           <View style={styles.temView}>
-            <Icon name="thermostat" size={40} color="#7C2908" style={styles.weatherIconTermHum} />
+            <Icon name="thermostat" size={40} color="#512413" style={styles.weatherIconTermHum} />
             <CustomText style={styles.infoText}>
               {weather.main.temp}°C
             </CustomText>
@@ -215,13 +240,14 @@ const ContactDetailComponent: React.FC = () => {
 
       <EditContactModal contactId={contactId} visible={isModalVisible} onClose={closeModal} contact={data} />
     </ScrollView>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F8EDE3',
-    height: 600,
+    height: 1000,
   },
   containerPhoto: {
     alignItems: 'center',
@@ -245,6 +271,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
+    textAlign: 'center'
   },
   infoRow: {
     paddingLeft: 18,
@@ -329,6 +356,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
   },
+  containerCategory: {
+    // backgroundColor: 'rgb(220, 158, 33)',
+    padding: 5,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    // alignSelf: 'flex-start',
+    borderRadius: 15,
+    margin: 15,
+    marginTop: 20,
+    gap: 5,
+    width: '50%'
+  },
+  nameCategory: {
+    color: '#DFD3C3',
+    fontSize: 18,
+    fontWeight: '300',
+  }
 });
 
 export default ContactDetailComponent;

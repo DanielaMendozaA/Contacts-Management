@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ActivityIndicator, View, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Alert } from 'react-native';
 import CustomText from '../common/CustomText.component';
 import useSubmitAddContact from '../../hooks/contacts/useSubmitAddContact';
 import ContactForm from './ContactForm.component';
 import { LatLng } from 'react-native-maps';
-import { ICreateContact } from '../../interfaces/contact.interface';
+import { ICreateContact } from '../../interfaces/contacts/contact.interface';
 
 const AddContactForm = () => {
   const [location, setLocation] = useState<LatLng | null>(null)
@@ -19,9 +19,6 @@ const AddContactForm = () => {
 
 
   const onSubmit = (contact: ICreateContact) => {
-    console.log("hola desde submit");
-    
-
     try {
       console.log("contact desde el form", contact);
     

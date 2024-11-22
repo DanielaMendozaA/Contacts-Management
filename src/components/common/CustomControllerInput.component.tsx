@@ -3,6 +3,7 @@ import { Controller, Control, FieldValues, Path, FieldErrors } from 'react-hook-
 
 import CustomText from './CustomText.component';
 import CustomInput from './CustomInput.component';
+import { KeyboardTypeOptions } from 'react-native';
 
 interface CustomControllerInputProps<T extends FieldValues> {
   control: Control<T>;
@@ -13,6 +14,8 @@ interface CustomControllerInputProps<T extends FieldValues> {
   color: string;
   rules?: object;
   errors?: FieldErrors<T>;
+  keyboardType?: KeyboardTypeOptions; 
+  secureTextEntry?: boolean;
 }
 
 const CustomControllerInput = <T extends FieldValues>({
@@ -23,7 +26,9 @@ const CustomControllerInput = <T extends FieldValues>({
   size,
   color,
   rules,
-  errors
+  errors,
+  keyboardType,
+  secureTextEntry
 }: CustomControllerInputProps<T>) => {
   return (
     <Controller
@@ -39,6 +44,8 @@ const CustomControllerInput = <T extends FieldValues>({
             iconName={iconName}
             size={size}
             color={color}
+            keyboardType={keyboardType} 
+            secureTextEntry={secureTextEntry} 
           />
           {errors && errors[name] && errors[name]?.message && (
             <CustomText>{String(errors[name]?.message)}</CustomText> 

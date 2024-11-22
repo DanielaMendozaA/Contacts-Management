@@ -1,5 +1,4 @@
-import { LatLng } from "react-native-maps";
-import { IWeather } from "../../interfaces/weather.interface";
+import { IWeather } from "../../interfaces/others/weather.interface";
 import { axiosInstanceWeather } from "../../config/axios.config";
 
 

@@ -97,7 +97,11 @@ const MapPickerComponent: React.FC<MapPickerProps> = ({ onLocationSelected, isVi
           )}
           <CustomButton
             title="Guardar Ubicación"
-            onPress={() => selectedLocation && onLocationSelected(selectedLocation)} />
+            onPress={() => selectedLocation && onLocationSelected(selectedLocation)} 
+            style={styles.locationButton}
+            
+            />
+             
 
         </View>
       </View>
@@ -106,6 +110,9 @@ const MapPickerComponent: React.FC<MapPickerProps> = ({ onLocationSelected, isVi
 };
 
 const styles = StyleSheet.create({
+  locationButton: {
+    justifyContent: 'center'
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
