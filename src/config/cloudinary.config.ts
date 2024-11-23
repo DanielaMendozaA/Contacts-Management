@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { baseUrl } from './axios.config';
 
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/du4qblzak/image/upload'; 
-const UPLOAD_PRESET = 'contact_photos_upload'; 
+const BACKEND_URL = `${baseUrl}:3004/api/v1/cloudinary/upload`
 
 export const uploadImageToCloudinary = async (photoUri: string) => {
   const formData = new FormData();
@@ -10,17 +10,19 @@ export const uploadImageToCloudinary = async (photoUri: string) => {
     type: 'image/jpeg', 
     name: `photo_${Date.now()}.jpg`,
   });
-  formData.append('upload_preset', UPLOAD_PRESET);
-  console.log("formdata", formData)
+
   try {
-    const response = await axios.post(CLOUDINARY_URL, formData, {
+    const response = await axios.post(BACKEND_URL, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    console.log("respuesta desde claudinary", response);
+    console.log("Respuesta desde el backend", response);
+
+    console.log("response data secure -----", response.data.data.secure_url);
     
-    return response.data.secure_url;
+
+    return response.data.data.secure_url;
   } catch (error) {
-    console.error('Error uploading image to Cloudinary:', error);
+    console.error('Error uploading image to the backend:', error);
     throw error;
   }
 };

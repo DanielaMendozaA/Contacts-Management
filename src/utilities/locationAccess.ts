@@ -1,8 +1,8 @@
 import { Alert } from 'react-native';
-import { ensureLocationPermission } from './permissions'; 
+import { ensurePermission } from './permissions'; 
 
 export async function handleLocationAccess() {
-  const hasPermission = await ensureLocationPermission();
+  const hasPermission = await ensurePermission();
 
   if (hasPermission) {
     console.log("Permiso concedido. Puedes acceder a la ubicación.");

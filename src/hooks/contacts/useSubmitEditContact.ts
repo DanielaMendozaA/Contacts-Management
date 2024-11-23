@@ -1,17 +1,26 @@
 import { useState } from 'react';
-import { IEditContact } from '../../interfaces/contact.interface';
 import { ContactService } from '../../services/contacts/contact.service';
+import { AppDispatch } from '../../redux/store';
+import { useDispatch } from 'react-redux';
+import { editContact } from '../../redux/features/contactSlice';
+import { IContact, IEditContact } from '../../interfaces/contacts/contact.interface';
 
 const useSubmitEditContact = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dispatch: AppDispatch = useDispatch<AppDispatch>();
 
-  const submitContact = async (contactId: string, data: IEditContact, onSuccess: () => void) => {
+  const submitContact = async (contactId: number, data: IEditContact, onSuccess: () => void) => {
     setLoading(true);
     setError(null);
     
     try {
-      await ContactService.updateContact(contactId, data);      
+      await ContactService.updateContact(contactId, data);
+      const editedContact = {
+        id: contactId,
+        ...data
+      }
+      dispatch(editContact(editedContact as IContact));
       onSuccess(); 
     } catch (err: any) {
       console.error(err);

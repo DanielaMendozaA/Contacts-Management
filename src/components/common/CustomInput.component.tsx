@@ -1,18 +1,29 @@
 import React from 'react';
-import { TextInputProps, View } from 'react-native';
+import { KeyboardTypeOptions, TextInputProps, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import styled from 'styled-components/native';
 
-interface CustomInputProps{
+interface CustomInputProps {
   value: string;
   onChange?: (text: string) => void;
   placeholder?: string;
   iconName: string;
   size: number;
   color: string;
+  keyboardType?: KeyboardTypeOptions;
+  secureTextEntry?: boolean;
 }
 
-const CustomInput: React.FC<CustomInputProps> = ({ value, onChange, placeholder, iconName, size, color }) => {
+const CustomInput: React.FC<CustomInputProps> = ({
+  value,
+  onChange,
+  placeholder,
+  iconName,
+  size,
+  color,
+  keyboardType, 
+  secureTextEntry 
+}) => {
   return (
     <Container>
       <StyledIcon name={iconName} size={size} color={color} />
@@ -20,7 +31,9 @@ const CustomInput: React.FC<CustomInputProps> = ({ value, onChange, placeholder,
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor="rgb(95, 58, 32)" 
+        placeholderTextColor="rgb(95, 58, 32)"
+        keyboardType={keyboardType} 
+        secureTextEntry={secureTextEntry} 
       />
     </Container>
   );

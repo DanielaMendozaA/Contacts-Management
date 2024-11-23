@@ -5,8 +5,8 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 import { uploadImageToCloudinary } from '../../config/cloudinary.config';
 import CustomTouchableIcon from '../common/CustomIconTouchable.component';
-import { ensureLocationPermission } from '../../utilities/permissions';
-import { Permissions } from '../../enums/permission.enum';
+import { ensurePermission } from '../../utilities/permissions';
+import { PERMISSIONS } from 'react-native-permissions';
 
 interface ImagePickerProps {
   onImageSelected: (imageUrl: string) => void;
@@ -19,7 +19,7 @@ const ImagePickerComponent: React.FC<ImagePickerProps> = ({ onImageSelected, ini
   const handleImagePick = async (fromCamera: boolean) => {
     let result
     if (fromCamera) {
-      const hasPermissionCamera = await ensureLocationPermission(Permissions.CAMERA);
+      const hasPermissionCamera = await ensurePermission(PERMISSIONS.ANDROID.CAMERA);
       if (hasPermissionCamera) {
         result = await launchCamera({ mediaType: 'photo' });
       } else {
@@ -29,7 +29,7 @@ const ImagePickerComponent: React.FC<ImagePickerProps> = ({ onImageSelected, ini
         );
       }
     } else {
-      const hasPermissionGalery = await ensureLocationPermission(Permissions.READ_MEDIA_IMAGES)
+      const hasPermissionGalery = await ensurePermission(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES)
       if (hasPermissionGalery) {
         result = await launchImageLibrary({ mediaType: 'photo' })
       } else {
@@ -50,6 +50,8 @@ const ImagePickerComponent: React.FC<ImagePickerProps> = ({ onImageSelected, ini
 
       try {
         const cloudinaryUrl = await uploadImageToCloudinary(uri);
+        console.log("cloudinary url", cloudinaryUrl);
+        
         onImageSelected(cloudinaryUrl);
       } catch (error) {
         console.error('Error uploading image:', error);
@@ -79,7 +81,7 @@ const ImagePickerComponent: React.FC<ImagePickerProps> = ({ onImageSelected, ini
 
       <View style={styles.containerIcons}>
         <CustomTouchableIcon
-          iconName="photo-camera"
+          iconName="add-a-photo"
           onPress={() => handleImagePick(true)}
           size={35} />
         <CustomTouchableIcon

@@ -17,8 +17,10 @@ const ContactPicker: React.FC<ContactPickerProps> = ({ selectedCategory, onCateg
                 onValueChange={onCategoryChange}
                 style={styles.picker}
             >
-                <Picker.Item label="Client" value="client" />
-                <Picker.Item label="Employee" value="employee" />
+                
+                <Picker.Item label="Categoría" value = '' />
+                <Picker.Item label="Cliente" value="cliente" />
+                <Picker.Item label="Empleado" value="empleado" />
             </Picker>
         </View>
     );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LatLng } from 'react-native-maps';
@@ -10,23 +10,41 @@ import CustomText from '../common/CustomText.component';
 import ImagePickerComponent from '../others/ImagePickerComponent';
 import CustomButton from '../common/CustomTextTouchable.component';
 import CustomControllerInput from '../common/CustomControllerInput.component';
-import { ensureLocationPermission } from '../../utilities/permissions';
+import { ensurePermission } from '../../utilities/permissions';
 import MapPickerComponent from '../others/MapPickerComponent';
 import CustomTouchableIcon from '../common/CustomIconTouchable.component';
-import { Permissions } from '../../enums/permission.enum';
 import useContactAdress from '../../hooks/contacts/useContactAddressWeather';
 import ContactPicker from '../common/CustomPicker.component';
+import { PERMISSIONS } from 'react-native-permissions';
 
 const schema = yup.object().shape({
-  email: yup.string().email('El correo electrónico es inválido').required('Correo electrónico es requerido'),
-  name: yup.string().required('El nombre es requerido'),
-  phone: yup.string().required('El teléfono es requerido'),
-  category: yup.string().required('La categoría es requerida'),
-  photo: yup.string().optional(),
+  email: yup.string()
+    .email('El correo electrónico es inválido')
+    .required('Correo electrónico es requerido'),
+
+  name: yup.string()
+    .min(6).max(32).
+    required('El nombre es requerido'),
+
+  phone: yup.number()
+    .required('El teléfono es requerido, debe tener 10 números').min(15),
+
+  category: yup.string()
+    .notOneOf([""])
+    .required('La categoría es requerida'),
+
+  photo: yup.string().nullable(),
+
 });
 
 interface ContactFormProps {
-  defaultValues?: { name: string; email: string; phone: string; category: string; photo?: string };
+  defaultValues?: {
+    name: string;
+    email: string;
+    phone: number;
+    category: string;
+    photo?: string
+  };
   onSubmit: (data: any) => void;
   loading: boolean;
   buttonText: string;
@@ -36,9 +54,15 @@ interface ContactFormProps {
 }
 
 const ContactForm: React.FC<ContactFormProps> = ({
-  defaultValues, onSubmit, loading, buttonText, onSaveLocation, latitudeContactForm, longitudeContactForm }) => {
+  defaultValues,
+  onSubmit,
+  loading,
+  buttonText,
+  onSaveLocation,
+  latitudeContactForm,
+  longitudeContactForm }) => {
   const [isMapVisible, setIsMapVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('client');
+  const [selectedCategory, setSelectedCategory] = useState<string>("categoría");
   const [coords, setCoords] = useState<LatLng | null>(
     latitudeContactForm && longitudeContactForm
       ? {
@@ -53,17 +77,24 @@ const ContactForm: React.FC<ContactFormProps> = ({
     defaultValues: defaultValues || {}
   });
 
+  const watchedValues = useWatch({ control });
+  useEffect(() => {
+    console.log("datos actualizados", watchedValues);
+
+
+  }, [watchedValues])
+
   useEffect(() => {
     if (defaultValues?.category) {
       console.log("selected categoria", selectedCategory);
-      
+
       setSelectedCategory(defaultValues.category);
       setValue('category', defaultValues.category);
     }
   }, [defaultValues, setValue]);
 
   const handleLocationAccess = async () => {
-    const hasPermissionFine = await ensureLocationPermission(Permissions.ACCESS_FINE_LOCATION)
+    const hasPermissionFine = await ensurePermission(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
 
     if (hasPermissionFine) {
       setIsMapVisible(true);
@@ -170,7 +201,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
 
       </View>
 
-      <CustomButton title={buttonText} onPress={handleSubmit(onSubmit)} />
+      <CustomButton
+        title={buttonText}
+        onPress={handleSubmit(onSubmit)}
+        style={styles.touchableText}
+      />
     </View>
   );
 };
@@ -181,7 +216,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   containerPhotoPicker: {
-    backgroundColor: 'rgb(95, 58, 32)',
+    backgroundColor: '#5c3120',
     padding: 16,
     marginBottom: 16,
     borderRadius: 10,
@@ -211,6 +246,11 @@ const styles = StyleSheet.create({
     margin: 10,
     lineHeight: 20,
   },
+  touchableText: {
+    justifyContent: 'center',
+  }
 });
 
 export default ContactForm;
+
+// const hasPermissionFine = await ensurePermission(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)

@@ -1,27 +1,12 @@
-import { ContactCategoty } from "../enums/category.enum";
+import { ContactCategoty } from "../../enums/category.enum";
+import { IContact } from "./contact.interface";
 
 export interface IContactResponse {
     statusCode: number;
     message: string;
-    data: Data | Data[]; 
+    data: IContact | IContact[]; 
 }
 
-export interface Data {
-    id: number;
-    name: string;
-    email: string;
-    phone:string; 
-    category: ContactCategoty;
-    photo?: string | undefined;
-    latitude?: number | undefined;
-    longitude?: number | undefined;
-    createdBy?: null;
-    updatedBy?: null;
-    deletedBy?: null;
-    createdAt?: Date;
-    updatedAt?: Date;
-    deletedAt?: null;
-}
 
 export interface IContactUpdateResponse {
     statusCode: number;
